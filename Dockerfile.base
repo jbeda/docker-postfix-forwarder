@@ -5,9 +5,19 @@ RUN echo "deb http://http.debian.net/debian wheezy-backports main" >>/etc/apt/so
 RUN apt-get update \
   && apt-get -t wheezy-backports install -y --no-install-recommends \
     sasl2-bin \
+    libsasl2-modules \
     postfix \  
     opendkim \
     opendkim-tools \
+    rsyslog \
+    cmake \
+    build-essential \
+    python-pip \
   && rm -rf /var/lib/apt/lists/*
 
- ADD . /opt
+RUN pip install pyyaml
+
+WORKDIR /opt
+
+ADD build-postsrsd.sh /opt/
+RUN /opt/build-postsrsd.sh

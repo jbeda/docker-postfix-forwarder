@@ -1,4 +1,4 @@
-FROM postfix
+FROM postfix-forwarder-base
 MAINTAINER Joe Beda
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -8,3 +8,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps
 
 ENV TERM=xterm
+ADD . /opt
+

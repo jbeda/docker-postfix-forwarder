@@ -1,0 +1,39 @@
+
+# Set this to the hostname that shows up when you run `dig -x <IP>` on the
+# your external IP address.
+ptr_hostname: somerandom.domain.from.provider
+
+# This is the domain that is used for SRS. All forwarded mail will be
+# rewritten to be coming from this domain.  You'll probably want an SPF record
+# for this domain also.
+srs_domain: srs.example.com
+
+# This is a secret used by SRS to make sure that bounces are from mail we
+# actually sent. Generate it with:
+#   dd if=/dev/urandom bs=18 count=1 2>/dev/null | base64
+srs_secret: random base64
+
+# This is the set of virtual domains.
+virtual_domains:
+  example.com:
+    # Each account has the following properties:
+    # * name: The name that this MTA will send mail as.  This is translated to
+    #   name@domain.com.
+    # * password: The password used to authenticate for sending mail.  I can't
+    #   figure out a way to avoid putting it in plain text here.
+    # * forward: Where this account will forward to.
+    # * dot_plus_rewrite: Rewrite 'user.extra@domain.com' to
+    #   'forward_user+extra@forward_domain.com' for the main name.  Optional,
+    #   defaults to true.
+    # * aliases: A list of other email addresses that will forward to the same
+    #   place. There is no provision for sending mail *as* these addresses.
+    #   Create a new account if you need that. Optional.
+    - name: alice
+      password: alice_pw
+      forward: alice@gmail.com
+      dot_plus_rewrite: true
+      aliases:
+        - al
+    - name: bob
+      password: bob_pw
+      forward: bob@gmail.com
