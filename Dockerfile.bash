@@ -10,3 +10,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV TERM=xterm
 ADD . /opt
 
+CMD ['bash']

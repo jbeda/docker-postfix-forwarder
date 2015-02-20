@@ -11,9 +11,14 @@ For each domain you want to forward, set something like this:
 name | type | value
 -----|------|------
 mail.example.com | A | x.x.x.x
-example.com | MX | 1 mail.example.com
+example.com | MX | 1 mail.example.com.
 example.com | TXT | "v=spf1 mx ~all"
-srs.example.com | MX | 1 mail.example.com
+
+For the one domain that you'll use for SRS, do this:
+
+name | type | value
+-----|------|------
+srs.example.com | MX | 1 mail.example.com.
 srs.example.com | TXT | "v=spf1 mx ~all"
 
 ## Config file
@@ -30,13 +35,32 @@ If you are using the Google Cloud Registry, simply run `make upload-gcr`.  This 
 
 To run the image, do something like this:
 
-```
+```bash
 sudo mkdir /opt/postfix-forwarder
+GCEPROJECT=$(gcloud config -q --format text list project | cut -d ' ' -f 2 | tr - _)
+gcloud docker pull gcr.io/$GCEPROJECT/postfix-forwarder
 docker run --name postfix \
   -v /opt/postfix-forwarder:/var/spool/postfix \
   -p 587:587 -p 25:25 \
-  -d gcr.io/<project>/postfix-forwarder
+  -d gcr.io/$GCEPROJECT/postfix-forwarder
 ```
+
+As all of the important data is stored in a host volume, you kill/delete/restart the container as necessary to change configuration.  Note that the account IDs used in the container (for the `postfix` user, and `postfix` and `postdrop` groups) won't line up with your host system so if you back up this directory (using tar or whatever) use numeric IDs.
+
+## Configuring GMail
+
+If you are using GMail, you can configure it to send mail through this account.  To do that:
+
+1. Go to "Settings" and then "Accounts and Import"
+2. Click on "Add another email address you own"
+3. Enter the full email address: `user@example.com` and click "Next Step"
+4. Set up the SMTP server:
+  1. Set the SMTP server to `mail.example.com` and the port to `587`.
+  2. Set the username to the full email address (not just the user part): `user@example.com`
+  3. Enter your password for this account
+  4. Select "Secure connection using TLS"
+  5. Click "Add Account"
+5. Click on the verify link as it is sent.  This might get directed to spam.
 
 ## Gotcha: Logging
 

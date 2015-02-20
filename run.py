@@ -41,6 +41,9 @@ $WorkDirectory /var/spool/rsyslog
   Popen(['rsyslogd', '-n'])
 
 def base_postfix_config():
+  # Set up the spool directory so it hass all of the right sub-dirs.
+  check_call(['postfix', 'post-install', 'create-missing'])
+
   # Turn off all the chrooting in postfix. This only works for postfix v2.11+.
   # We grab that from wheezy-backports.
   check_call(['postconf', '-F', '*/*/chroot = n'])

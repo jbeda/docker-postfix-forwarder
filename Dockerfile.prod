@@ -3,4 +3,4 @@ MAINTAINER Joe Beda
 
 ADD . /opt
 
-RUN ["/opt/run.py"]
+CMD ["/opt/run.py"]
