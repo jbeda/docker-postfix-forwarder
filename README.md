@@ -2,7 +2,11 @@
 
 This is the start of a Docker container that will forward mail using postfix.
 
-The container will support acting as an MTA for outgoing mail from that forwarded address and will implement SRS so that all forwarded messages will be trusted.
+The container supports acting as an MTA for outgoing mail from that forwarded address.
+
+The container implements a light postscreen pre-processing to reject obvious spam.
+
+There is support for SRS, but it is commented out as apparently GMail [advises *not* doing envelope sender rewriting when forwarding mail](https://support.google.com/mail/answer/175365?hl=en).
 
 ## DNS records
 
@@ -85,6 +89,8 @@ No guarantees here as this is a bit of a hack.  This is a big hole in Docker rig
 
 ## TODOs
 
+* [ ] Integrate SpamAssasin
+* [ ] Support multiple email forward targets
 * [ ] Figure out DKIM
 * [ ] More flexibilty in rewriting/aliases
 

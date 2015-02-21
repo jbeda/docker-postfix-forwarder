@@ -19,9 +19,10 @@ def main():
 
   spawn_rsyslogd()
   base_postfix_config()
+  configure_postscreen()
   configure_sasl()
   configure_virtual_domains()
-  spawn_postsrsd()
+  # spawn_postsrsd()
   spawn_postfix()
 
   # Wait for something to exit.  As soon as some child process exits we exit
@@ -69,6 +70,25 @@ def base_postfix_config():
   check_call(['postconf', '-Pe', 'submission/inet/smtpd_relay_restrictions=permit_sasl_authenticated,reject'])
   check_call(['postconf', '-Pe', 'submission/inet/milter_macro_daemon_name=ORIGINATING'])
 
+def configure_postscreen():
+  check_call(['postconf', '-MX', 'smtp/inet'])
+  check_call(['postconf', '-Me', 'smtpd/pass = smtpd pass - - n - - smtpd'])
+  check_call(['postconf', '-Me', 'smtp/inet = smtp inet n - n - 1 postscreen'])
+  check_call(['postconf', '-Me', 'tlsproxy/unix = tlsproxy unix - - n - 0 tlsproxy'])
+  check_call(['postconf', '-Me', 'dnsblog/unix = dnsblog unix - - n - 0 dnsblog'])
+
+  # Before-220 tests
+  check_call(['postconf', '-e', 'postscreen_dnsbl_action = enforce'])
+  check_call(['postconf', '-e', 'postscreen_dnsbl_threshold = 2'])
+  check_call(['postconf', '-e', 'postscreen_dnsbl_sites = zen.spamhaus.org*2 bl.spamcop.net*1 b.barracudacentral.org*1 swl.spamhaus.org*-3'])
+
+  check_call(['postconf', '-e', 'postscreen_greet_action = enforce'])
+
+  # After-220 tests -- these can cause significant delays so are disabled for now.
+  # check_call(['postconf', '-e', 'postscreen_bare_newline_action = enforce'])
+  # check_call(['postconf', '-e', 'postscreen_bare_newline_enable = yes'])
+  # check_call(['postconf', '-e', 'postscreen_non_smtp_command_enable = yes'])
+  # check_call(['postconf', '-e', 'postscreen_pipelining_enable = yes'])
 
 def configure_sasl():
   check_call(['postconf', '-e', 'smtpd_sasl_type = cyrus'])
