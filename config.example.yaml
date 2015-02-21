@@ -52,7 +52,8 @@ virtual_domains:
     #   name@domain.com.
     # * password: The password used to authenticate for sending mail.  I can't
     #   figure out a way to avoid putting it in plain text here.
-    # * forward: Where this account will forward to.
+    # * forward: Where this account will forward to.  This can either be a
+    # * single email address or a list of email addresses.
     # * dot_plus_rewrite: Rewrite 'user.extra@domain.com' to
     #   'forward_user+extra@forward_domain.com' for the main name.  Optional,
     #   defaults to true.
@@ -67,4 +68,6 @@ virtual_domains:
         - al
     - name: bob
       password: bob_pw
-      forward: bob@gmail.com
+      forward:
+        - bob1@gmail.com
+        - bob2@gmail.com

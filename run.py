@@ -130,6 +130,12 @@ mech_list: PLAIN
       if retcode:
         raise CalledProcessError(retcode, cmd)
 
+def get_forward_list(account):
+  forward = account['forward']
+  if isinstance(forward, basestring):
+    forward = [forward]
+  return forward
+
 def configure_virtual_domains():
   domains = config['virtual_domains'].keys()
   check_call(['postconf', '-e', 'virtual_alias_domains=%s' % ' '.join(domains)])
@@ -138,7 +144,8 @@ def configure_virtual_domains():
     for (domain, accounts) in config['virtual_domains'].items():
       for account in accounts:
         def forward(alias):
-          logging.info("Forwarding %s@%s to %s" % (alias, domain, account['forward']))
+          forward = ' '.join(get_forward_list(account))
+          logging.info("Forwarding %s@%s to %s" % (alias, domain, forward))
           f.write('%s@%s %s\n' % (alias, domain, account['forward']))
         forward(account['name'])
         for alias in account.get('aliases', []):
@@ -151,9 +158,9 @@ def configure_virtual_domains():
       for account in accounts:
         if account.get('dot_plus_rewrite', True):
           name = account['name']
-          forward_account, forward_domain = account['forward'].split('@')
-          logging.info("Forwarding %s.*@%s to %s+*@%s" % (name, domain, forward_account, forward_domain))
-          f.write('/^%s((\\+|\\.)([-a-zA-Z0-9_]+))?@%s$/ %s+$3@%s\n' % (name, domain, forward_account, forward_domain))
+          forwards = ' '.join(["%s+$3@%s" % tuple(forward.split('@')) for forward in get_forward_list(account)])
+          logging.info("Forwarding %s.*@%s to %s" % (name, domain, forwards))
+          f.write('/^%s((\\+|\\.)([-a-zA-Z0-9_]+))?@%s$/ %s\n' % (name, domain, forwards))
 
 def spawn_postsrsd():
   if not config['srs']['enable']:

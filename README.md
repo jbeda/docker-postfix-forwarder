@@ -90,7 +90,7 @@ No guarantees here as this is a bit of a hack.  This is a big hole in Docker rig
 ## TODOs
 
 * [ ] Integrate SpamAssasin
-* [ ] Support multiple email forward targets
+* [x] Support multiple email forward targets
 * [ ] Figure out DKIM
 * [ ] More flexibilty in rewriting/aliases
 
