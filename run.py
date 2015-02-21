@@ -1,5 +1,19 @@
 #!/usr/bin/python
 
+# Copyright 2015 Joe Beda
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
 from subprocess import *
 import yaml
 import io
@@ -22,7 +36,7 @@ def main():
   configure_postscreen()
   configure_sasl()
   configure_virtual_domains()
-  # spawn_postsrsd()
+  spawn_postsrsd()
   spawn_postfix()
 
   # Wait for something to exit.  As soon as some child process exits we exit
@@ -71,6 +85,9 @@ def base_postfix_config():
   check_call(['postconf', '-Pe', 'submission/inet/milter_macro_daemon_name=ORIGINATING'])
 
 def configure_postscreen():
+  if not config['postscreen']['enable']:
+    return
+
   check_call(['postconf', '-MX', 'smtp/inet'])
   check_call(['postconf', '-Me', 'smtpd/pass = smtpd pass - - n - - smtpd'])
   check_call(['postconf', '-Me', 'smtp/inet = smtp inet n - n - 1 postscreen'])
@@ -84,11 +101,12 @@ def configure_postscreen():
 
   check_call(['postconf', '-e', 'postscreen_greet_action = enforce'])
 
-  # After-220 tests -- these can cause significant delays so are disabled for now.
-  # check_call(['postconf', '-e', 'postscreen_bare_newline_action = enforce'])
-  # check_call(['postconf', '-e', 'postscreen_bare_newline_enable = yes'])
-  # check_call(['postconf', '-e', 'postscreen_non_smtp_command_enable = yes'])
-  # check_call(['postconf', '-e', 'postscreen_pipelining_enable = yes'])
+  if config['postscreen']['enable_slow_checks']:
+    # After-220 tests -- these can cause significant delays so are disabled for now.
+    check_call(['postconf', '-e', 'postscreen_bare_newline_action = enforce'])
+    check_call(['postconf', '-e', 'postscreen_bare_newline_enable = yes'])
+    check_call(['postconf', '-e', 'postscreen_non_smtp_command_enable = yes'])
+    check_call(['postconf', '-e', 'postscreen_pipelining_enable = yes'])
 
 def configure_sasl():
   check_call(['postconf', '-e', 'smtpd_sasl_type = cyrus'])
@@ -119,7 +137,7 @@ def configure_virtual_domains():
   with open('/etc/postfix/virtual', 'w') as f:
     for (domain, accounts) in config['virtual_domains'].items():
       for account in accounts:
-        def forward(alias):        
+        def forward(alias):
           logging.info("Forwarding %s@%s to %s" % (alias, domain, account['forward']))
           f.write('%s@%s %s\n' % (alias, domain, account['forward']))
         forward(account['name'])
@@ -138,6 +156,9 @@ def configure_virtual_domains():
           f.write('/^%s((\\+|\\.)([-a-zA-Z0-9_]+))?@%s$/ %s+$3@%s\n' % (name, domain, forward_account, forward_domain))
 
 def spawn_postsrsd():
+  if not config['srs']['enable']:
+    return
+
   check_call(['postconf', '-e', 'sender_canonical_maps = tcp:127.0.0.1:10001'])
   check_call(['postconf', '-e', 'sender_canonical_classes = envelope_sender'])
   check_call(['postconf', '-e', 'recipient_canonical_maps = tcp:127.0.0.1:10002'])

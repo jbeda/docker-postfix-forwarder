@@ -1,17 +1,48 @@
+# Copyright 2015 Joe Beda
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
 
 # Set this to the hostname that shows up when you run `dig -x <IP>` on the
 # your external IP address.
 ptr_hostname: somerandom.domain.from.provider
 
-# This is the domain that is used for SRS. All forwarded mail will be
-# rewritten to be coming from this domain.  You'll probably want an SPF record
-# for this domain also.
-srs_domain: srs.example.com
+# SRS is a scheme to rewrite the sender in the envelope.  This helps when
+# forwarding to servers that strictly enforce SPF.  However, the risk is that
+# you are forwarding SPAM too and the target service may classify you as a
+# spammer.  See https://support.google.com/mail/answer/175365?hl=en.
+srs:
+  enable: False
 
-# This is a secret used by SRS to make sure that bounces are from mail we
-# actually sent. Generate it with:
-#   dd if=/dev/urandom bs=18 count=1 2>/dev/null | base64
-srs_secret: random base64
+  # This is the domain that is used for SRS. All forwarded mail will be
+  # rewritten to be coming from this domain.  You'll probably want an SPF record
+  # for this domain also.
+  srs_domain: srs.example.com
+
+  # This is a secret used by SRS to make sure that bounces are from mail we
+  # actually sent. Generate it with:
+  #   dd if=/dev/urandom bs=18 count=1 2>/dev/null | base64
+  srs_secret: random base64
+
+# Postscreen sits in front of postfix and looks for suspicious implementations
+# that are sending mail.  It also checks a couple of common black lists.
+postscreen:
+  enable: True
+
+  # More in depth checks from postscreen are implemented via a mechanism where
+  # it must return a "temporarily unavailable" message to senders.  For
+  # senders that do a reasonable amount of backoff, this could slow down mail
+  # delivery dramatically.
+  enable_slow_checks: False
 
 # This is the set of virtual domains.
 virtual_domains:
