@@ -19,9 +19,14 @@ ptr_hostname: somerandom.domain.from.provider
 # SRS is a scheme to rewrite the sender in the envelope.  This helps when
 # forwarding to servers that strictly enforce SPF.  However, the risk is that
 # you are forwarding SPAM too and the target service may classify you as a
-# spammer.  See https://support.google.com/mail/answer/175365?hl=en.
+# spammer. See https://support.google.com/mail/answer/175365?hl=en.
+#
+# However, it  seems to be clear that GMail reliably classifies mail as SPAM
+# when the SPF  check hard fails.  I've seen this happen with mail from evite,
+# apple and  redfin as they all have '-all' at the end of their SPF policies.
+# I'm sure there are others.
 srs:
-  enable: False
+  enable: True
 
   # This is the domain that is used for SRS. All forwarded mail will be
   # rewritten to be coming from this domain.  You'll probably want an SPF record

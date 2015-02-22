@@ -172,9 +172,9 @@ def spawn_postsrsd():
   check_call(['postconf', '-e', 'recipient_canonical_classes = envelope_recipient,header_recipient'])
 
   with open('/opt/srs.secret', 'w') as f:
-    f.write(config['srs_secret'])
+    f.write(config['srs']['srs_secret'])
 
-  Popen(['postsrsd-1.2/build/postsrsd', '-s/opt/srs.secret', '-upostfix', '-d%s' % config['srs_domain']])
+  Popen(['postsrsd-1.2/build/postsrsd', '-s/opt/srs.secret', '-upostfix', '-d%s' % config['srs']['srs_domain']])
 
 def spawn_postfix():
   # Start up the postfix master in the foreground.  Normally this happens with:

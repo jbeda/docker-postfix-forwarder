@@ -4,10 +4,6 @@ This is the start of a Docker container that will forward mail using postfix.
 
 The container supports acting as an MTA for outgoing mail from that forwarded address.
 
-The container implements a light postscreen pre-processing to reject obvious spam.
-
-There is support for SRS, but it is commented out as apparently GMail [advises *not* doing envelope sender rewriting when forwarding mail](https://support.google.com/mail/answer/175365?hl=en).
-
 ## DNS records
 
 For each domain you want to forward, set something like this:
@@ -28,6 +24,28 @@ srs.example.com | TXT | "v=spf1 mx ~all"
 ## Config file
 
 Copy `config.example.yaml` to `config.yaml` and edit as appropriate.  There are comments on each value.
+
+### SRS
+
+SPF is a way for mail senders to publish in DNS a list of address that are allowed to send mail for that domain.  The policy can either soft-fail or hard-fail.  See [RFC7208](http://tools.ietf.org/html/rfc7208#section-2.6) for details.
+
+Support for SRS is optional but enabled in the example config. You should think carefully about leaving it enabled.
+
+If you enable it you will be forwarding some SPAM on and it is possible that you'll classified as a SPAM relay/sender.  That isn't good.  Hopefully we'll be able to screen enough incoming SPAM that this won't be a problem.
+
+On the other hand, if the mail you are forwarding fails the SPF check, it is likely that legitimate mail will be marked as SPAM.  There are some large companies that have hard-fail SPF policies (I've seen Apple, Evite and RedFin, for example) that are classified as SPAM by GMail without SRS.
+
+Note that GMail [advises *not* doing envelope sender rewriting when forwarding mail](https://support.google.com/mail/answer/175365?hl=en).  Even so, I'm currently running with SRS enabled when forwarding to GMail.
+
+### Postscreen
+
+Postscreen is included with Postfix and provides some simple ways to reject mail as likely SPAM.  You can read the full details [here](http://www.postfix.org/POSTSCREEN_README.html).
+
+Basically, there are two types of checks:
+
+**Pre-220 checks:**  These checks are performed during the initial negotation of the connection with the sending agent.  If these pass, then postscreen can hand off the TCP connection to postfix with little delay in service.  This first making sure that the sending agent waits appropriately before speaking.  The second test is against DNS black lists.  We rely most heavily on spamhaus here but I'm open to suggestions.
+
+**Post-220 checks:** There are further checks that look for deeper protocol violations.  The problem here is that postscreen isn't a proxy.  So if it determines that a sending agent is legit, it can't hand off to postfix at this point. Instead, it tells the sending agent to retry later.  On the next try, the connection will be handed off to postfix immediately.  However, well behaved agents may wait minutes before retrying.
 
 ## Build/upload
 
