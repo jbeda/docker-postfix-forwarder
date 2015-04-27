@@ -12,8 +12,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# Set this to the hostname that shows up when you run `dig -x <IP>` on the
-# your external IP address.
+# Set this to the hostname that shows up when you run `dig -x <IP>` on the your
+# external IP address.
+#
+# Note that if this starts with 4 integers separated by dots (i.e.
+# 1.2.3.4.foo.com) some MTAs (hotmail, I'm looking at you) will barf.  You can
+# either use a different domain (your email domain) or a bare IP address
+# surrounded in brackets.
 ptr_hostname: somerandom.domain.from.provider
 
 # SRS is a scheme to rewrite the sender in the envelope.  This helps when

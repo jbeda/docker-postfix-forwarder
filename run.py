@@ -174,7 +174,13 @@ def spawn_postsrsd():
   with open('/opt/srs.secret', 'w') as f:
     f.write(config['srs']['srs_secret'])
 
-  Popen(['postsrsd-1.2/build/postsrsd', '-s/opt/srs.secret', '-upostfix', '-d%s' % config['srs']['srs_domain']])
+  exclude_domains=",".join(config['virtual_domains'].keys())
+
+  cmd = ['postsrsd-1.2/build/postsrsd', '-s/opt/srs.secret', '-upostfix',
+         '-d%s' % config['srs']['srs_domain'],
+         '-X%s' % exclude_domains]
+  logging.info("Running postsrsd: %s", repr(cmd))
+  Popen(cmd)
 
 def spawn_postfix():
   # Start up the postfix master in the foreground.  Normally this happens with:
