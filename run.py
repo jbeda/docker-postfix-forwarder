@@ -120,8 +120,8 @@ auxprop_plugin: sasldb
 mech_list: PLAIN
 """.strip())
 
-  for (domain, accounts) in config['virtual_domains'].items():
-    for account in accounts:
+  for (domain, domain_info) in config['virtual_domains'].items():
+    for account in domain_info['accounts']:
       logging.info("Creating SASL account for %s@%s" % (account['name'], domain))
       cmd = ['saslpasswd2', '-p', '-c', '-u', domain, account['name']]
       p = Popen(cmd, stdin=PIPE)
@@ -139,10 +139,10 @@ def get_forward_list(account):
 def configure_virtual_domains():
   domains = config['virtual_domains'].keys()
   check_call(['postconf', '-e', 'virtual_alias_domains=%s' % ' '.join(domains)])
-  check_call(['postconf', '-e', 'virtual_alias_maps=regexp:/etc/postfix/virtual.regexp hash:/etc/postfix/virtual'])
+  check_call(['postconf', '-e', 'virtual_alias_maps=hash:/etc/postfix/virtual regexp:/etc/postfix/virtual.regexp'])
   with open('/etc/postfix/virtual', 'w') as f:
-    for (domain, accounts) in config['virtual_domains'].items():
-      for account in accounts:
+    for (domain, domain_info) in config['virtual_domains'].items():
+      for account in domain_info['accounts']:
         def forward(alias):
           forward = ' '.join(get_forward_list(account))
           logging.info("Forwarding %s@%s to %s" % (alias, domain, forward))
@@ -154,13 +154,24 @@ def configure_virtual_domains():
   check_call(['postmap', '/etc/postfix/virtual'])
 
   with open('/etc/postfix/virtual.regexp', 'w') as f:
-    for (domain, accounts) in config['virtual_domains'].items():
-      for account in accounts:
+    for (domain, domain_info) in config['virtual_domains'].items():
+      for account in domain_info['accounts']:
         if account.get('dot_plus_rewrite', True):
           name = account['name']
           forwards = ' '.join(["%s+$3@%s" % tuple(forward.split('@')) for forward in get_forward_list(account)])
           logging.info("Forwarding %s.*@%s to %s" % (name, domain, forwards))
           f.write('/^%s((\\+|\\.)([-a-zA-Z0-9_]+))?@%s$/ %s\n' % (name, domain, forwards))
+
+  ai_fn = '/etc/postfix/access_inbound'
+  check_call(['postconf', '-e', 'smtpd_sender_restrictions=check_recipient_access hash:%s' % ai_fn])
+  with open(ai_fn, 'w') as f:
+    for (domain, domain_info) in config['virtual_domains'].items():
+      for blackhole in domain_info.get('blackholes', []):
+        bh_email = "%s@%s" % (blackhole, domain)
+        logging.info("Blackholeing %s" % bh_email)
+        f.write('%s REJECT\n' % bh_email)
+  check_call(['postmap', ai_fn])
+
 
 def spawn_postsrsd():
   if not config['srs']['enable']:

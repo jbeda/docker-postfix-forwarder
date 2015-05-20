@@ -57,27 +57,32 @@ postscreen:
 # This is the set of virtual domains.
 virtual_domains:
   example.com:
-    # Each account has the following properties:
-    # * name: The name that this MTA will send mail as.  This is translated to
-    #   name@domain.com.
-    # * password: The password used to authenticate for sending mail.  I can't
-    #   figure out a way to avoid putting it in plain text here.
-    # * forward: Where this account will forward to.  This can either be a
-    # * single email address or a list of email addresses.
-    # * dot_plus_rewrite: Rewrite 'user.extra@domain.com' to
-    #   'forward_user+extra@forward_domain.com' for the main name.  Optional,
-    #   defaults to true.
-    # * aliases: A list of other email addresses that will forward to the same
-    #   place. There is no provision for sending mail *as* these addresses.
-    #   Create a new account if you need that. Optional.
-    - name: alice
-      password: alice_pw
-      forward: alice@gmail.com
-      dot_plus_rewrite: true
-      aliases:
-        - al
-    - name: bob
-      password: bob_pw
-      forward:
-        - bob1@gmail.com
-        - bob2@gmail.com
+    accounts:
+      # Each account has the following properties:
+      # * name: The name that this MTA will send mail as.  This is translated to
+      #   name@domain.com.
+      # * password: The password used to authenticate for sending mail.  I can't
+      #   figure out a way to avoid putting it in plain text here.
+      # * forward: Where this account will forward to.  This can either be a
+      # * single email address or a list of email addresses.
+      # * dot_plus_rewrite: Rewrite 'user.extra@domain.com' to
+      #   'forward_user+extra@forward_domain.com' for the main name.  Optional,
+      #   defaults to true.
+      # * aliases: A list of other email addresses that will forward to the same
+      #   place. There is no provision for sending mail *as* these addresses.
+      #   Create a new account if you need that. Optional.
+      - name: alice
+        password: alice_pw
+        forward: alice@gmail.com
+        dot_plus_rewrite: true
+        aliases:
+          - al
+      - name: bob
+        password: bob_pw
+        forward:
+          - bob1@gmail.com
+          - bob2@gmail.com
+    blackholes:
+      # Each entry in this list will be explicitly dropped.  This will be
+      # applied before any other mappings/rewrites
+      - alice.spammy
