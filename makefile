@@ -33,10 +33,10 @@ GCR_NAME := gcr.io/$(BUCKET)/$(image-name)
 
 upload-gcr: image
 	docker tag -f $(image-name) $(GCR_NAME)
-	gcloud preview docker push $(GCR_NAME)
+	gcloud docker push $(GCR_NAME)
 	docker rmi $(GCR_NAME)
 
 upload-gcr-test: image
 	docker tag -f $(image-name) $(GCR_NAME):test
-	gcloud preview docker push $(GCR_NAME):test
+	gcloud docker push $(GCR_NAME):test
 	docker rmi $(GCR_NAME):test
