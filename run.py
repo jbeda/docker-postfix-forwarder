@@ -19,6 +19,7 @@ import yaml
 import io
 import logging
 import os
+import os.path
 
 CONFIG_FILE='/opt/config.yaml'
 SYSLOG_FIFO='/var/log/syslog-fifo'
@@ -43,7 +44,11 @@ def main():
   os.wait()
 
 def spawn_rsyslogd():
-  logging.info('')
+  logging.info('Starting rsyslogd')
+  if os.path.exists(SYSLOG_FIFO):
+    call(['rm', SYSLOG_FIFO])
+  if os.path.exists('/var/run/rsyslogd.pid'):
+    call(['rm', '/var/run/rsyslogd.pid'])
   check_call(['mkfifo', SYSLOG_FIFO])
   with open('/etc/rsyslog.conf', 'w') as f:
     f.write(r"""
@@ -204,7 +209,9 @@ def spawn_postfix():
   # working directory to the spool directory.  I might be missing some env
   # variables :/
   os.chdir('/var/spool/postfix')
-  Popen(['/usr/lib/postfix/master', '-d'])
+  cmd = ['/usr/lib/postfix/master', '-d']
+  logging.info("Running postfix master: %s", repr(cmd))
+  Popen(cmd)
 
 
 if __name__ == "__main__":
